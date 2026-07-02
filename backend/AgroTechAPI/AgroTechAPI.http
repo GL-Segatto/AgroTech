@@ -1,0 +1,6 @@
+@AgroTechAPI_HostAddress = http://localhost:5181
+
+GET {{AgroTechAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
