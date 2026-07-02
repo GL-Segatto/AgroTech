@@ -1,0 +1,3 @@
+A AgroTech é uma plataforma web capaz de auxiliar os produtores rurais na gestão financeira de suas atividades agrícolas.
+ Ele é capaz de acompanhar os custos planejados do tipo de cultura cultivada pelo produtor, assim oferecendo uma melhor tomada de decisões. Sendo possível gerar controle sobre a produção principalmente de milho, soja, trigo e tabaco, que são culturas que demandam controle sobre as despesas dos insumos, mão de obra e manutenções.
+Com o AgroTech o produtor é capaz de cadastrar safras, registrar custos previstos, acompanhar indicadores financeiros e visualizar dashboards que demonstram a situação econômica para cada cultura.
