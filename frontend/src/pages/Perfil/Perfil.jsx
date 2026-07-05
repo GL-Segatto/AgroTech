@@ -1,5 +1,11 @@
+import Layout from "../../components/Layout/Layout";
+
 function Perfil() {
-  return <h1>Perfil</h1>;
+  return(
+    <Layout>
+      <h1>Perfil</h1>
+    </Layout>
+  );
 }
 
 export default Perfil;

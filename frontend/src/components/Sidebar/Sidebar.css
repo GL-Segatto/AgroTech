@@ -1,0 +1,18 @@
+.sidebar{
+    width:220px;
+    height:calc(100vh - 70px);
+    background:#388E3C;
+    display:flex;
+    flex-direction:column;
+    padding-top:30px;
+}
+
+.sidebar a{
+    color:white;
+    text-decoration:none;
+    padding:15px 20px;
+}
+
+.sidebar a:hover{
+    background:#2E7D32;
+}
