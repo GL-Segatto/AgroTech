@@ -1,151 +1,181 @@
-import { useState } from "react";
-import { useData } from "../../context/DataContext";
-import Layout from "../../components/Layout/Layout";
+import { useState, useEffect } from "react";
 import Button from "../../components/Button/Button";
 import FormInput from "../../components/FormInput/FormInput";
+import api from "../../services/api";
 
 function Lancamentos() {
 
+    const [lancamentos, setLancamentos] = useState([]);
+
     const [descricao, setDescricao] = useState("");
     const [categoria, setCategoria] = useState("");
-    const [tipo, setTipo] = useState("Orçado");
+    const [tipo, setTipo] = useState("");
     const [valor, setValor] = useState("");
     const [data, setData] = useState("");
 
     const [editandoId, setEditandoId] = useState(null);
 
-    const {
-      lancamentos,
-      setLancamentos
-    } = useData();
+    useEffect(() => {
 
-    function salvarLancamento(e){
+        carregarLancamentos();
+
+    }, []);
+
+    async function carregarLancamentos() {
+
+        try {
+
+            const resposta = await api.get("/Lancamentos");
+
+            setLancamentos(resposta.data);
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao carregar lançamentos:", erro);
+
+        }
+
+    }
+
+    async function salvarLancamento(e) {
 
         e.preventDefault();
 
-        if(!descricao || !categoria || !valor || !data){
+        if (!descricao || !categoria || !tipo || !valor || !data) {
+
             alert("Preencha todos os campos.");
+
             return;
-        }
-
-        if(editandoId !== null){
-
-            setLancamentos(
-
-                lancamentos.map(lancamento=>
-
-                    lancamento.id === editandoId
-                        ? {
-                            ...lancamento,
-                            descricao,
-                            categoria,
-                            tipo,
-                            valor,
-                            data
-                        }
-                        : lancamento
-
-                )
-
-            );
-
-            setEditandoId(null);
 
         }
 
-        else{
+        try {
 
-            const novo = {
+            const lancamento = {
 
-                id: Date.now(),
+                id: editandoId,
                 descricao,
                 categoria,
                 tipo,
-                valor,
+                valor: Number(valor),
                 data
 
             };
 
-            setLancamentos([...lancamentos, novo]);
+            if (editandoId !== null) {
+
+                await api.put(`/Lancamentos/${editandoId}`, lancamento);
+
+            }
+
+            else {
+
+                await api.post("/Lancamentos", lancamento);
+
+            }
+
+            await carregarLancamentos();
+
+            limparFormulario();
 
         }
 
-        setDescricao("");
-        setCategoria("");
-        setTipo("Orçado");
-        setValor("");
-        setData("");
+        catch (erro) {
+
+            console.error("Erro ao salvar lançamento:", erro);
+
+        }
 
     }
 
-    function editarLancamento(lancamento){
+    function editarLancamento(lancamento) {
 
         setDescricao(lancamento.descricao);
         setCategoria(lancamento.categoria);
         setTipo(lancamento.tipo);
         setValor(lancamento.valor);
-        setData(lancamento.data);
+        setData(lancamento.data.substring(0, 10));
 
         setEditandoId(lancamento.id);
 
     }
 
-    function excluirLancamento(id){
+    async function excluirLancamento(id) {
 
-        setLancamentos(
+        if (!confirm("Deseja realmente excluir este lançamento?")) {
 
-            lancamentos.filter(l=>l.id !== id)
+            return;
 
-        );
+        }
+
+        try {
+
+            await api.delete(`/Lancamentos/${id}`);
+
+            carregarLancamentos();
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao excluir lançamento:", erro);
+
+        }
 
     }
 
-    return(
+    function limparFormulario() {
 
-        <Layout>
+        setDescricao("");
+        setCategoria("");
+        setTipo("");
+        setValor("");
+        setData("");
 
-            <h1>Lançamentos Financeiros</h1>
+        setEditandoId(null);
+
+    }
+
+    return (
+
+        <>
+
+            <h1>Lançamentos</h1>
 
             <form onSubmit={salvarLancamento}>
 
                 <FormInput
                     label="Descrição"
                     value={descricao}
-                    onChange={(e)=>setDescricao(e.target.value)}
+                    onChange={(e) => setDescricao(e.target.value)}
                 />
 
                 <FormInput
                     label="Categoria"
                     value={categoria}
-                    onChange={(e)=>setCategoria(e.target.value)}
+                    onChange={(e) => setCategoria(e.target.value)}
                 />
 
-                <label>Tipo</label>
-
-                <select
+                <FormInput
+                    label="Tipo"
                     value={tipo}
-                    onChange={(e)=>setTipo(e.target.value)}
-                >
-
-                    <option>Orçado</option>
-                    <option>Realizado</option>
-
-                </select>
-
-                <br/><br/>
+                    onChange={(e) => setTipo(e.target.value)}
+                />
 
                 <FormInput
                     label="Valor"
                     type="number"
                     value={valor}
-                    onChange={(e)=>setValor(e.target.value)}
+                    onChange={(e) => setValor(e.target.value)}
                 />
 
                 <FormInput
                     label="Data"
                     type="date"
                     value={data}
-                    onChange={(e)=>setData(e.target.value)}
+                    onChange={(e) => setData(e.target.value)}
                 />
 
                 <Button type="submit">
@@ -154,21 +184,30 @@ function Lancamentos() {
 
                         editandoId !== null
 
-                        ?
+                            ? "Salvar Alterações"
 
-                        "Salvar Alterações"
-
-                        :
-
-                        "Cadastrar Lançamento"
+                            : "Cadastrar Lançamento"
 
                     }
 
                 </Button>
 
+                {
+
+                    editandoId !== null &&
+
+                    <Button
+                        type="button"
+                        onClick={limparFormulario}
+                    >
+                        Cancelar
+                    </Button>
+
+                }
+
             </form>
 
-            <hr/>
+            <hr />
 
             <table border="1" cellPadding="10">
 
@@ -191,23 +230,21 @@ function Lancamentos() {
 
                     {
 
-                        lancamentos.map(l=>(
-                            <tr key={l.id}>
+                        lancamentos.map((lancamento) => (
 
-                                <td>{l.descricao}</td>
+                            <tr key={lancamento.id}>
 
-                                <td>{l.categoria}</td>
-
-                                <td>{l.tipo}</td>
-
-                                <td>R$ {l.valor}</td>
-
-                                <td>{l.data}</td>
+                                <td>{lancamento.descricao}</td>
+                                <td>{lancamento.categoria}</td>
+                                <td>{lancamento.tipo}</td>
+                                <td>R$ {Number(lancamento.valor).toFixed(2)}</td>
+                                <td>{new Date(lancamento.data).toLocaleDateString()}</td>
 
                                 <td>
 
                                     <Button
-                                        onClick={()=>editarLancamento(l)}
+                                        type="button"
+                                        onClick={() => editarLancamento(lancamento)}
                                     >
                                         Editar
                                     </Button>
@@ -215,7 +252,8 @@ function Lancamentos() {
                                     {" "}
 
                                     <Button
-                                        onClick={()=>excluirLancamento(l.id)}
+                                        type="button"
+                                        onClick={() => excluirLancamento(lancamento.id)}
                                     >
                                         Excluir
                                     </Button>
@@ -223,6 +261,7 @@ function Lancamentos() {
                                 </td>
 
                             </tr>
+
                         ))
 
                     }
@@ -231,7 +270,7 @@ function Lancamentos() {
 
             </table>
 
-        </Layout>
+        </>
 
     );
 

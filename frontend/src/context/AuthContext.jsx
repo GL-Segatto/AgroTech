@@ -1,10 +1,19 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
 
     const [user, setUser] = useState(null);
+
+    // Carrega usuário ao iniciar o app (persistência)
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     function login(email, password) {
 
@@ -13,7 +22,7 @@ export function AuthProvider({ children }) {
 
             const loggedUser = {
                 nome: "Administrador",
-                email: email
+                email
             };
 
             localStorage.setItem("token", "agrotech-token");
@@ -36,19 +45,9 @@ export function AuthProvider({ children }) {
     }
 
     return (
-
-        <AuthContext.Provider
-            value={{
-                user,
-                login,
-                logout
-            }}
-        >
-
+        <AuthContext.Provider value={{ user, login, logout }}>
             {children}
-
         </AuthContext.Provider>
-
     );
 }
 

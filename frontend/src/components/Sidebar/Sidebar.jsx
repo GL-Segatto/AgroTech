@@ -1,28 +1,80 @@
-import { Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
 
-function Sidebar(){
+function Sidebar() {
 
-    return(
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
+    function handleLogout() {
+        logout();
+        navigate("/", { replace: true });
+    }
+
+    return (
         <aside className="sidebar">
 
-            <Link to="/dashboard">Dashboard</Link>
+            <h3 className="logo">AgroTech</h3>
 
-            <Link to="/usuarios">Usuários</Link>
+            {user && (
+                <p className="user">
+                    Olá, {user.nome}
+                </p>
+            )}
 
-            <Link to="/safras">Safras</Link>
+            <nav className="nav">
 
-            <Link to="/categorias">Categorias</Link>
+                <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) => isActive ? "active" : ""}
+                >
+                    Dashboard
+                </NavLink>
 
-            <Link to="/lancamentos">Lançamentos</Link>
+                <NavLink
+                    to="/usuarios"
+                    className={({ isActive }) => isActive ? "active" : ""}
+                >
+                    Usuários
+                </NavLink>
 
-            <Link to="/perfil">Perfil</Link>
+                <NavLink
+                    to="/safras"
+                    className={({ isActive }) => isActive ? "active" : ""}
+                >
+                    Safras
+                </NavLink>
+
+                <NavLink
+                    to="/categorias"
+                    className={({ isActive }) => isActive ? "active" : ""}
+                >
+                    Categorias
+                </NavLink>
+
+                <NavLink
+                    to="/lancamentos"
+                    className={({ isActive }) => isActive ? "active" : ""}
+                >
+                    Lançamentos
+                </NavLink>
+
+                <NavLink
+                    to="/perfil"
+                    className={({ isActive }) => isActive ? "active" : ""}
+                >
+                    Perfil
+                </NavLink>
+
+            </nav>
+
+            <button className="logout" onClick={handleLogout}>
+                Sair
+            </button>
 
         </aside>
-
     );
-
 }
 
 export default Sidebar;

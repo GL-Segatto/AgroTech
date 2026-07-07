@@ -1,67 +1,86 @@
-import { useState } from "react";
-import { useData } from "../../context/DataContext";
-import Layout from "../../components/Layout/Layout";
+import { useState, useEffect } from "react";
 import Button from "../../components/Button/Button";
 import FormInput from "../../components/FormInput/FormInput";
+import api from "../../services/api";
 
 function Usuarios() {
+
+    const [usuarios, setUsuarios] = useState([]);
 
     const [nome, setNome] = useState("");
     const [email, setEmail] = useState("");
     const [cargo, setCargo] = useState("");
+
     const [editandoId, setEditandoId] = useState(null);
 
-    const { usuarios, setUsuarios } = useData();
+    useEffect(() => {
 
-    function salvarUsuario(e) {
+        carregarUsuarios();
+
+    }, []);
+
+    async function carregarUsuarios() {
+
+        try {
+
+            const resposta = await api.get("/Usuarios");
+
+            setUsuarios(resposta.data);
+
+        } catch (erro) {
+
+            console.error("Erro ao carregar usuários:", erro);
+
+        }
+
+    }
+
+    async function salvarUsuario(e) {
 
         e.preventDefault();
 
         if (!nome || !email || !cargo) {
+
             alert("Preencha todos os campos.");
+
             return;
-        }
-
-        if (editandoId !== null) {
-
-            const usuariosAtualizados = usuarios.map((usuario) => {
-
-                if (usuario.id === editandoId) {
-
-                    return {
-                        ...usuario,
-                        nome,
-                        email,
-                        cargo
-                    };
-
-                }
-
-                return usuario;
-
-            });
-
-            setUsuarios(usuariosAtualizados);
-            setEditandoId(null);
-
-        } else {
-
-            const novoUsuario = {
-
-                id: Date.now(),
-                nome,
-                email,
-                cargo
-
-            };
-
-            setUsuarios([...usuarios, novoUsuario]);
 
         }
 
-        setNome("");
-        setEmail("");
-        setCargo("");
+        try {
+
+            if (editandoId !== null) {
+
+                await api.put(`/Usuarios/${editandoId}`, {
+
+                    id: editandoId,
+                    nome,
+                    email,
+                    cargo
+
+                });
+
+            } else {
+
+                await api.post("/Usuarios", {
+
+                    nome,
+                    email,
+                    cargo
+
+                });
+
+            }
+
+            await carregarUsuarios();
+
+            limparFormulario();
+
+        } catch (erro) {
+
+            console.error("Erro ao salvar usuário:", erro);
+
+        }
 
     }
 
@@ -75,19 +94,41 @@ function Usuarios() {
 
     }
 
-    function excluirUsuario(id) {
+    async function excluirUsuario(id) {
 
-        setUsuarios(
+        if (!confirm("Deseja realmente excluir este usuário?")) {
 
-            usuarios.filter((usuario) => usuario.id !== id)
+            return;
 
-        );
+        }
+
+        try {
+
+            await api.delete(`/Usuarios/${id}`);
+
+            carregarUsuarios();
+
+        } catch (erro) {
+
+            console.error("Erro ao excluir usuário:", erro);
+
+        }
+
+    }
+
+    function limparFormulario() {
+
+        setNome("");
+        setEmail("");
+        setCargo("");
+
+        setEditandoId(null);
 
     }
 
     return (
 
-        <Layout>
+        <>
 
             <h1>Usuários</h1>
 
@@ -113,10 +154,31 @@ function Usuarios() {
                 />
 
                 <Button type="submit">
-                    {editandoId !== null
-                        ? "Salvar Alterações"
-                        : "Cadastrar Usuário"}
+
+                    {
+
+                        editandoId !== null
+
+                            ? "Salvar Alterações"
+
+                            : "Cadastrar Usuário"
+
+                    }
+
                 </Button>
+
+                {
+
+                    editandoId !== null &&
+
+                    <Button
+                        type="button"
+                        onClick={limparFormulario}
+                    >
+                        Cancelar
+                    </Button>
+
+                }
 
             </form>
 
@@ -139,17 +201,7 @@ function Usuarios() {
 
                 <tbody>
 
-                    {usuarios.length === 0 ? (
-
-                        <tr>
-
-                            <td colSpan="4">
-                                Nenhum usuário cadastrado.
-                            </td>
-
-                        </tr>
-
-                    ) : (
+                    {
 
                         usuarios.map((usuario) => (
 
@@ -164,6 +216,7 @@ function Usuarios() {
                                 <td>
 
                                     <Button
+                                        type="button"
                                         onClick={() => editarUsuario(usuario)}
                                     >
                                         Editar
@@ -172,6 +225,7 @@ function Usuarios() {
                                     {" "}
 
                                     <Button
+                                        type="button"
                                         onClick={() => excluirUsuario(usuario.id)}
                                     >
                                         Excluir
@@ -183,13 +237,13 @@ function Usuarios() {
 
                         ))
 
-                    )}
+                    }
 
                 </tbody>
 
             </table>
 
-        </Layout>
+        </>
 
     );
 

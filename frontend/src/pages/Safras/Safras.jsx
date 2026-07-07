@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { useData } from "../../context/DataContext";
-import Layout from "../../components/Layout/Layout";
+import { useState, useEffect } from "react";
 import Button from "../../components/Button/Button";
 import FormInput from "../../components/FormInput/FormInput";
+import api from "../../services/api";
 
 function Safras() {
+
+    const [safras, setSafras] = useState([]);
 
     const [nome, setNome] = useState("");
     const [cultura, setCultura] = useState("");
@@ -12,71 +13,80 @@ function Safras() {
 
     const [editandoId, setEditandoId] = useState(null);
 
-    const {
-      safras,
-      setSafras
-    } = useData();
+    useEffect(() => {
 
-    function adicionarSafra(e) {
+        carregarSafras();
+
+    }, []);
+
+    async function carregarSafras() {
+
+        try {
+
+            const resposta = await api.get("/Safras");
+
+            setSafras(resposta.data);
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao carregar safras:", erro);
+
+        }
+
+    }
+
+    async function salvarSafra(e) {
 
         e.preventDefault();
 
         if (!nome || !cultura || !area) {
+
             alert("Preencha todos os campos.");
+
             return;
-        }
-
-        if (editandoId !== null) {
-
-            const novasSafras = safras.map((safra) => {
-
-                if (safra.id === editandoId) {
-
-                    return {
-                        ...safra,
-                        nome,
-                        cultura,
-                        area
-                    };
-
-                }
-
-                return safra;
-
-            });
-
-            setSafras(novasSafras);
-
-            setEditandoId(null);
-
-        } else {
-
-            const novaSafra = {
-
-                id: Date.now(),
-                nome,
-                cultura,
-                area
-
-            };
-
-            setSafras([...safras, novaSafra]);
 
         }
 
-        setNome("");
-        setCultura("");
-        setArea("");
+        try {
 
-    }
+            if (editandoId !== null) {
 
-    function excluirSafra(id) {
+                await api.put(`/Safras/${editandoId}`, {
 
-        setSafras(
+                    id: editandoId,
+                    nome,
+                    cultura,
+                    area: Number(area)
 
-            safras.filter((safra) => safra.id !== id)
+                });
 
-        );
+            }
+
+            else {
+
+                await api.post("/Safras", {
+
+                    nome,
+                    cultura,
+                    area: Number(area)
+
+                });
+
+            }
+
+            await carregarSafras();
+
+            limparFormulario();
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao salvar safra:", erro);
+
+        }
 
     }
 
@@ -90,26 +100,58 @@ function Safras() {
 
     }
 
+    async function excluirSafra(id) {
+
+        if (!confirm("Deseja realmente excluir esta safra?")) {
+
+            return;
+
+        }
+
+        try {
+
+            await api.delete(`/Safras/${id}`);
+
+            carregarSafras();
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao excluir safra:", erro);
+
+        }
+
+    }
+
+    function limparFormulario() {
+
+        setNome("");
+        setCultura("");
+        setArea("");
+
+        setEditandoId(null);
+
+    }
+
     return (
 
-        <Layout>
+        <>
 
-            <h1>Gestão de Safras</h1>
+            <h1>Safras</h1>
 
-            <form onSubmit={adicionarSafra}>
+            <form onSubmit={salvarSafra}>
 
                 <FormInput
-                    label="Nome da Safra"
+                    label="Nome"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    placeholder="Ex.: Safra Verão 2026"
                 />
 
                 <FormInput
                     label="Cultura"
                     value={cultura}
                     onChange={(e) => setCultura(e.target.value)}
-                    placeholder="Milho, Soja..."
                 />
 
                 <FormInput
@@ -117,16 +159,34 @@ function Safras() {
                     type="number"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
-                    placeholder="50"
                 />
 
                 <Button type="submit">
 
-                    {editandoId !== null
-                        ? "Salvar Alterações"
-                        : "Cadastrar Safra"}
+                    {
+
+                        editandoId !== null
+
+                            ? "Salvar Alterações"
+
+                            : "Cadastrar Safra"
+
+                    }
 
                 </Button>
+
+                {
+
+                    editandoId !== null &&
+
+                    <Button
+                        type="button"
+                        onClick={limparFormulario}
+                    >
+                        Cancelar
+                    </Button>
+
+                }
 
             </form>
 
@@ -164,6 +224,7 @@ function Safras() {
                                 <td>
 
                                     <Button
+                                        type="button"
                                         onClick={() => editarSafra(safra)}
                                     >
                                         Editar
@@ -172,6 +233,7 @@ function Safras() {
                                     {" "}
 
                                     <Button
+                                        type="button"
                                         onClick={() => excluirSafra(safra.id)}
                                     >
                                         Excluir
@@ -189,7 +251,7 @@ function Safras() {
 
             </table>
 
-        </Layout>
+        </>
 
     );
 

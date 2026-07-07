@@ -1,66 +1,89 @@
-import { useState } from "react";
-import { useData } from "../../context/DataContext";
-import Layout from "../../components/Layout/Layout";
+import { useState, useEffect } from "react";
 import Button from "../../components/Button/Button";
 import FormInput from "../../components/FormInput/FormInput";
+import api from "../../services/api";
 
 function Categorias() {
+
+    const [categorias, setCategorias] = useState([]);
 
     const [nome, setNome] = useState("");
     const [descricao, setDescricao] = useState("");
 
     const [editandoId, setEditandoId] = useState(null);
 
-    const {
-      categorias,
-      setCategorias
-    } = useData();
+    useEffect(() => {
 
-    function salvarCategoria(e) {
+        carregarCategorias();
+
+    }, []);
+
+    async function carregarCategorias() {
+
+        try {
+
+            const resposta = await api.get("/Categorias");
+
+            setCategorias(resposta.data);
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao carregar categorias:", erro);
+
+        }
+
+    }
+
+    async function salvarCategoria(e) {
 
         e.preventDefault();
 
         if (!nome || !descricao) {
+
             alert("Preencha todos os campos.");
+
             return;
-        }
-
-        if (editandoId !== null) {
-
-            setCategorias(
-
-                categorias.map(categoria =>
-
-                    categoria.id === editandoId
-                        ? {
-                            ...categoria,
-                            nome,
-                            descricao
-                        }
-                        : categoria
-
-                )
-
-            );
-
-            setEditandoId(null);
-
-        } else {
-
-            const novaCategoria = {
-
-                id: Date.now(),
-                nome,
-                descricao
-
-            };
-
-            setCategorias([...categorias, novaCategoria]);
 
         }
 
-        setNome("");
-        setDescricao("");
+        try {
+
+            if (editandoId !== null) {
+
+                await api.put(`/Categorias/${editandoId}`, {
+
+                    id: editandoId,
+                    nome,
+                    descricao
+
+                });
+
+            }
+
+            else {
+
+                await api.post("/Categorias", {
+
+                    nome,
+                    descricao
+
+                });
+
+            }
+
+            await carregarCategorias();
+
+            limparFormulario();
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao salvar categoria:", erro);
+
+        }
 
     }
 
@@ -73,19 +96,42 @@ function Categorias() {
 
     }
 
-    function excluirCategoria(id) {
+    async function excluirCategoria(id) {
 
-        setCategorias(
+        if (!confirm("Deseja realmente excluir esta categoria?")) {
 
-            categorias.filter(categoria => categoria.id !== id)
+            return;
 
-        );
+        }
+
+        try {
+
+            await api.delete(`/Categorias/${id}`);
+
+            carregarCategorias();
+
+        }
+
+        catch (erro) {
+
+            console.error("Erro ao excluir categoria:", erro);
+
+        }
+
+    }
+
+    function limparFormulario() {
+
+        setNome("");
+        setDescricao("");
+
+        setEditandoId(null);
 
     }
 
     return (
 
-        <Layout>
+        <>
 
             <h1>Categorias</h1>
 
@@ -117,6 +163,19 @@ function Categorias() {
 
                 </Button>
 
+                {
+
+                    editandoId !== null &&
+
+                    <Button
+                        type="button"
+                        onClick={limparFormulario}
+                    >
+                        Cancelar
+                    </Button>
+
+                }
+
             </form>
 
             <hr />
@@ -139,7 +198,7 @@ function Categorias() {
 
                     {
 
-                        categorias.map(categoria => (
+                        categorias.map((categoria) => (
 
                             <tr key={categoria.id}>
 
@@ -150,6 +209,7 @@ function Categorias() {
                                 <td>
 
                                     <Button
+                                        type="button"
                                         onClick={() => editarCategoria(categoria)}
                                     >
                                         Editar
@@ -158,6 +218,7 @@ function Categorias() {
                                     {" "}
 
                                     <Button
+                                        type="button"
                                         onClick={() => excluirCategoria(categoria.id)}
                                     >
                                         Excluir
@@ -175,7 +236,7 @@ function Categorias() {
 
             </table>
 
-        </Layout>
+        </>
 
     );
 

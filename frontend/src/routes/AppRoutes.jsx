@@ -9,67 +9,31 @@ import Categorias from "../pages/Categorias/Categorias";
 import Perfil from "../pages/Perfil/Perfil";
 
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
+import Layout from "../layout/Layout";
 
 function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
 
+                {/* LOGIN FORA DO LAYOUT */}
                 <Route path="/" element={<Login />} />
 
+                {/* ROTAS PROTEGIDAS COM LAYOUT */}
                 <Route
-                    path="/dashboard"
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <Layout />
                         </ProtectedRoute>
                     }
-                />
-
-                <Route
-                    path="/usuarios"
-                    element={
-                        <ProtectedRoute>
-                            <Usuarios />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/safras"
-                    element={
-                        <ProtectedRoute>
-                            <Safras />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/categorias"
-                    element={
-                        <ProtectedRoute>
-                            <Categorias />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/lancamentos"
-                    element={
-                        <ProtectedRoute>
-                            <Lancamentos />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/perfil"
-                    element={
-                        <ProtectedRoute>
-                            <Perfil />
-                        </ProtectedRoute>
-                    }
-                />
+                >
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/usuarios" element={<Usuarios />} />
+                    <Route path="/safras" element={<Safras />} />
+                    <Route path="/categorias" element={<Categorias />} />
+                    <Route path="/lancamentos" element={<Lancamentos />} />
+                    <Route path="/perfil" element={<Perfil />} />
+                </Route>
 
             </Routes>
         </BrowserRouter>
